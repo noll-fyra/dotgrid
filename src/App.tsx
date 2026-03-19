@@ -1,25 +1,70 @@
 import { useState, useEffect, useCallback } from 'react'
-import Page from './components/Page'
-import Settings from './components/Settings'
+import { Routes, Route } from 'react-router-dom'
+import IndexPage from './pages/IndexPage'
+import CreatePage from './pages/CreatePage'
 import { type Theme, type BgKey, type FontKey, FONTS, PAGE_BG } from './constants'
 import { makeEmptyGrid, type CellData } from './hooks/useGrid'
 
-export default function App() {
-  const [theme,  setTheme]  = useState<Theme>('light')
-  const [bgKey,  setBgKey]  = useState<BgKey>('white')
-  const [font,   setFont]   = useState<FontKey>('jetbrains')
+function load<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as T) : fallback
+  } catch {
+    return fallback
+  }
+}
 
-  const [pages, setPages]             = useState<CellData[][]>(() => [makeEmptyGrid()])
+export default function App() {
+  const [theme, setTheme] = useState<Theme>(() => load('dg_theme', 'light'))
+  const [bgKey, setBgKey] = useState<BgKey>(() => load('dg_bgKey', 'white'))
+  const [font,  setFont]  = useState<FontKey>(() => load('dg_font', 'jetbrains'))
+
+  const [pages, setPages]             = useState<CellData[][]>(() => load('dg_pages', [makeEmptyGrid()]))
+  const [titles, setTitles]           = useState<string[]>(() => load('dg_titles', []))
   const [currentPage, setCurrentPage] = useState(0)
-  const [direction, setDirection]     = useState<'left' | 'right'>('right')
+  const [bookmarks, setBookmarks]     = useState<Set<number>>(() => new Set(load<number[]>('dg_bookmarks', [])))
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('dg_theme', JSON.stringify(theme))
   }, [theme])
 
   useEffect(() => {
     document.documentElement.style.setProperty('--font', FONTS[font].family)
+    localStorage.setItem('dg_font', JSON.stringify(font))
   }, [font])
+
+  useEffect(() => {
+    localStorage.setItem('dg_bgKey', JSON.stringify(bgKey))
+  }, [bgKey])
+
+  useEffect(() => {
+    localStorage.setItem('dg_pages', JSON.stringify(pages))
+  }, [pages])
+
+  useEffect(() => {
+    localStorage.setItem('dg_titles', JSON.stringify(titles))
+  }, [titles])
+
+  const handleTitleChange = useCallback((title: string) => {
+    setTitles(prev => {
+      const next = [...prev]
+      next[currentPage] = title
+      return next
+    })
+  }, [currentPage])
+
+  useEffect(() => {
+    localStorage.setItem('dg_bookmarks', JSON.stringify([...bookmarks]))
+  }, [bookmarks])
+
+  const toggleBookmark = useCallback((index: number) => {
+    setBookmarks(prev => {
+      const next = new Set(prev)
+      next.has(index) ? next.delete(index) : next.add(index)
+      return next
+    })
+  }, [])
 
   const handleCellsChange = useCallback((cells: CellData[]) => {
     setPages(prev => {
@@ -29,69 +74,52 @@ export default function App() {
     })
   }, [currentPage])
 
-  const goLeft = useCallback(() => {
-    setDirection('left')
-    setCurrentPage(p => Math.max(0, p - 1))
-  }, [])
-
-  const goRight = useCallback(() => {
-    setDirection('right')
-    setCurrentPage(p => Math.min(pages.length - 1, p + 1))
-  }, [pages.length])
-
   const addPage = useCallback(() => {
-    setDirection('right')
+    const newIndex = pages.length
     setPages(prev => [...prev, makeEmptyGrid()])
-    setCurrentPage(pages.length)
+    setCurrentPage(newIndex)
   }, [pages.length])
 
-  const isFirst   = currentPage === 0
-  const isLast    = currentPage === pages.length - 1
-  const hasContent = pages[currentPage].some(c => c.char !== '')
+  const pageBg = PAGE_BG[theme][bgKey]
 
   return (
-    <div className="page-wrapper">
-      <Settings
-        theme={theme}
-        onToggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
-        bgKey={bgKey}
-        onChangeBg={setBgKey}
-        font={font}
-        onChangeFont={setFont}
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <IndexPage
+            pages={pages}
+            titles={titles}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            addPage={addPage}
+            pageBg={pageBg}
+            bookmarks={bookmarks}
+            toggleBookmark={toggleBookmark}
+          />
+        }
       />
-      <div className="page-container">
-          {!isFirst && (
-            <button className="nav-btn nav-btn--left" onClick={goLeft} aria-label="Previous page">
-              ‹
-            </button>
-          )}
-
-          <div key={currentPage} className={direction === 'right' ? 'page-enter-right' : 'page-enter-left'}>
-            <Page
-              key={currentPage}
-              pageBg={PAGE_BG[theme][bgKey]}
-              pageNumber={currentPage + 1}
-              initialCells={pages[currentPage]}
-              onCellsChange={handleCellsChange}
-            />
-          </div>
-
-          {isLast ? (
-            <button
-              className="nav-btn nav-btn--right nav-btn--add"
-              onClick={hasContent ? addPage : undefined}
-              aria-label="Add page"
-              aria-disabled={!hasContent}
-              style={{ opacity: hasContent ? undefined : 0.08, cursor: hasContent ? 'pointer' : 'default' }}
-            >
-              +
-            </button>
-          ) : (
-            <button className="nav-btn nav-btn--right" onClick={goRight} aria-label="Next page">
-              ›
-            </button>
-          )}
-        </div>
-    </div>
+      <Route
+        path="/create"
+        element={
+          <CreatePage
+            pages={pages}
+            currentPage={currentPage}
+            onCellsChange={handleCellsChange}
+            title={titles[currentPage] ?? ''}
+            onTitleChange={handleTitleChange}
+            theme={theme}
+            onToggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
+            bgKey={bgKey}
+            onChangeBg={setBgKey}
+            font={font}
+            onChangeFont={setFont}
+            pageBg={pageBg}
+            bookmarks={bookmarks}
+            toggleBookmark={toggleBookmark}
+          />
+        }
+      />
+    </Routes>
   )
 }

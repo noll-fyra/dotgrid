@@ -54,21 +54,7 @@ export default function FormatToolbar({ selection, onFormat, onBg, onColor, onMo
         </button>
       </div>
 
-      {/* Row 2: background colour — rounded squares */}
-      <div className="fmt-row">
-        {HIGHLIGHT_COLORS.map(({ label, value }) => (
-          <button
-            key={label}
-            className={`fmt-color${value === '' ? ' fmt-color--clear' : ''}`}
-            style={value ? { background: value } : undefined}
-            onClick={() => onBg(value)}
-            title={`Background: ${label}`}
-            aria-label={`Background: ${label}`}
-          />
-        ))}
-      </div>
-
-      {/* Row 3: text colour — "A" in each colour */}
+      {/* Row 2: text colour — "A" in each colour */}
       <div className="fmt-row">
         {TEXT_COLORS.map(({ label, value }) => (
           <button
@@ -81,6 +67,20 @@ export default function FormatToolbar({ selection, onFormat, onBg, onColor, onMo
           >
             A
           </button>
+        ))}
+      </div>
+
+      {/* Row 3: background colour — rounded squares */}
+      <div className="fmt-row">
+        {HIGHLIGHT_COLORS.map(({ label, value }) => (
+          <button
+            key={label}
+            className={`fmt-color${value === '' ? ' fmt-color--clear' : ''}`}
+            style={value ? { background: value } : undefined}
+            onClick={() => onBg(value)}
+            title={`Background: ${label}`}
+            aria-label={`Background: ${label}`}
+          />
         ))}
       </div>
     </div>

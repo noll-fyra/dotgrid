@@ -8,11 +8,14 @@ export const CELL_H = 24
 interface Props {
   pageBg: string
   pageNumber: number
+  title?: string
+  onTitleChange?: (title: string) => void
   initialCells?: CellData[]
   onCellsChange?: (cells: CellData[]) => void
+  searchHighlight?: Set<number>
 }
 
-export default function Page({ pageBg, pageNumber, initialCells, onCellsChange }: Props) {
+export default function Page({ pageBg, pageNumber, title, onTitleChange, initialCells, onCellsChange, searchHighlight }: Props) {
   const {
     cells, cursor, setCursor, extendSelectionTo,
     startRectSelection, extendRectSelectionTo,
@@ -82,7 +85,15 @@ export default function Page({ pageBg, pageNumber, initialCells, onCellsChange }
       className="page"
       style={{ width: pageWidth, height: pageHeight, background: pageBg }}
     >
-      <div className="page-title">Dot Journal</div>
+      <input
+        className="page-title-input"
+        value={title ?? ''}
+        onChange={e => onTitleChange?.(e.target.value.slice(0, 40))}
+        placeholder={`Page ${pageNumber}`}
+        maxLength={40}
+        aria-label="Page title"
+        onMouseDown={e => e.stopPropagation()}
+      />
 
       <input
         ref={inputRef}
@@ -115,14 +126,16 @@ export default function Page({ pageBg, pageNumber, initialCells, onCellsChange }
           {cells.map((cell, i) => {
             const isCursor     = i === cursor
             const cellSelected = selection ? isInSelection(i, selection) : false
+            const isMatch      = searchHighlight ? searchHighlight.has(i) : false
 
             return (
               <div
                 key={i}
                 className={[
                   'cell',
-                  cellSelected      ? 'cell--selected' : '',
-                  !cell.char        ? 'cell--empty'    : '',
+                  cellSelected ? 'cell--selected' : '',
+                  isMatch      ? 'cell--search'   : '',
+                  !cell.char   ? 'cell--empty'    : '',
                 ].join(' ').trim()}
                 style={cell.bg ? { background: cell.bg } : undefined}
                 onPointerDown={e => handleCellPointerDown(e, i)}
@@ -152,7 +165,6 @@ export default function Page({ pageBg, pageNumber, initialCells, onCellsChange }
         </div>
       </div>
 
-      <div className="page-number">{pageNumber}</div>
     </div>
   )
 }
