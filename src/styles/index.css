@@ -98,6 +98,27 @@ body {
   color: #e8a020;
 }
 
+.create-delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: #c0392b;
+  opacity: 0.5;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: opacity 0.12s;
+  margin-top: 2px;
+}
+
+.create-delete-btn:hover {
+  opacity: 1;
+}
+
+[data-theme="dark"] .create-delete-btn {
+  color: #e74c3c;
+}
+
 /* ── Sidebar search (create page) ── */
 .create-search {
   display: flex;

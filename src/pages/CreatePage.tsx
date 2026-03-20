@@ -20,13 +20,14 @@ interface Props {
   pageBg: string
   bookmarks: Set<number>
   toggleBookmark: (i: number) => void
+  onDeletePage: (index: number) => void
 }
 
 export default function CreatePage({
   pages, currentPage, onCellsChange,
   title, onTitleChange,
   theme, onToggleTheme, bgKey, onChangeBg, font, onChangeFont, pageBg,
-  bookmarks, toggleBookmark,
+  bookmarks, toggleBookmark, onDeletePage,
 }: Props) {
   const navigate      = useNavigate()
   const bookmarked    = bookmarks.has(currentPage)
@@ -76,6 +77,21 @@ export default function CreatePage({
         >
           {bookmarked ? '★' : '☆'}
         </button>
+        {pages.length > 1 && (
+          <button
+            className="create-delete-btn"
+            onClick={() => {
+              const label = title.trim() || `Page ${currentPage + 1}`
+              if (window.confirm(`Delete "${label}"? This cannot be undone.`)) {
+                onDeletePage(currentPage)
+                navigate('/')
+              }
+            }}
+            aria-label="Delete this page"
+          >
+            Delete
+          </button>
+        )}
 
         <div className="create-search">
           <input

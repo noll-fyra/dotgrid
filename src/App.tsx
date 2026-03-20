@@ -80,6 +80,20 @@ export default function App() {
     setCurrentPage(newIndex)
   }, [pages.length])
 
+  const deletePage = useCallback((index: number) => {
+    setPages(prev => prev.filter((_, i) => i !== index))
+    setTitles(prev => prev.filter((_, i) => i !== index))
+    setBookmarks(prev => {
+      const next = new Set<number>()
+      prev.forEach(b => {
+        if (b < index) next.add(b)
+        else if (b > index) next.add(b - 1)
+      })
+      return next
+    })
+    setCurrentPage(prev => Math.min(prev, pages.length - 2))
+  }, [pages.length])
+
   const pageBg = PAGE_BG[theme][bgKey]
 
   return (
@@ -117,6 +131,7 @@ export default function App() {
             pageBg={pageBg}
             bookmarks={bookmarks}
             toggleBookmark={toggleBookmark}
+            onDeletePage={deletePage}
           />
         }
       />
