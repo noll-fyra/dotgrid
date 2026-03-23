@@ -1,8 +1,9 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Page from '../components/Page'
 import Settings from '../components/Settings'
-import { type Theme, type BgKey, type FontKey } from '../constants'
+import BlockToolbar from '../components/BlockToolbar'
+import { type Theme, type BgKey, type FontKey, type Block, type BlockType } from '../constants'
 import type { CellData } from '../hooks/useGrid'
 
 interface Props {
@@ -21,6 +22,9 @@ interface Props {
   bookmarks: Set<number>
   toggleBookmark: (i: number) => void
   onDeletePage: (index: number) => void
+  // Block props
+  blocks: Block[]
+  onBlocksChange: (blocks: Block[]) => void
 }
 
 export default function CreatePage({
@@ -28,11 +32,15 @@ export default function CreatePage({
   title, onTitleChange,
   theme, onToggleTheme, bgKey, onChangeBg, font, onChangeFont, pageBg,
   bookmarks, toggleBookmark, onDeletePage,
+  blocks, onBlocksChange,
 }: Props) {
   const navigate      = useNavigate()
   const bookmarked    = bookmarks.has(currentPage)
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const pageContainerRef = useRef<HTMLDivElement>(null)
+
+  const [pendingBlockType, setPendingBlockType] = useState<BlockType | null>(null)
 
   const searchHighlight = useMemo<Set<number>>(() => {
     const q = searchQuery.toLowerCase()
@@ -57,8 +65,32 @@ export default function CreatePage({
     ? searchHighlight.size / searchQuery.length
     : 0
 
+  // Handle toolbar drag-to-create: toggle or activate tool on pointerdown
+  const handleToolPointerDown = useCallback((type: BlockType) => {
+    setPendingBlockType(prev => prev === type ? null : type)
+  }, [])
+
+  // Cancel pending block if pointer is released outside the page
+  // (covers both click-outside and drag-from-toolbar that misses the page)
+  useEffect(() => {
+    if (!pendingBlockType) return
+    const onGlobalPointerUp = (e: PointerEvent) => {
+      const pageEl = pageContainerRef.current?.querySelector('.page')
+      if (!pageEl?.contains(e.target as Node)) setPendingBlockType(null)
+    }
+    window.addEventListener('pointerup', onGlobalPointerUp)
+    return () => window.removeEventListener('pointerup', onGlobalPointerUp)
+  }, [pendingBlockType])
+
+  // Cancel pending block if clicking outside the page (e.g. keyboard nav)
+  const onPageAreaPointerDown = useCallback((e: React.PointerEvent) => {
+    if (!pendingBlockType) return
+    const pageEl = pageContainerRef.current?.querySelector('.page')
+    if (pageEl && !pageEl.contains(e.target as Node)) setPendingBlockType(null)
+  }, [pendingBlockType])
+
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper" onPointerDown={onPageAreaPointerDown}>
       {/* Left — Index home + bookmark */}
       <div className="create-sidebar-left">
         <button
@@ -114,7 +146,7 @@ export default function CreatePage({
 
       {/* Center — page editor */}
       <div className="page-center">
-        <div className="page-container">
+        <div className="page-container" ref={pageContainerRef}>
           <div className="page-enter-right">
             <Page
               key={currentPage}
@@ -125,10 +157,21 @@ export default function CreatePage({
               initialCells={pages[currentPage]}
               onCellsChange={onCellsChange}
               searchHighlight={searchHighlight}
+              blocks={blocks}
+              onBlocksChange={onBlocksChange}
+              pendingBlockType={pendingBlockType}
+              onBlockPlaced={() => setPendingBlockType(null)}
+              onBlockCancel={() => setPendingBlockType(null)}
             />
           </div>
         </div>
       </div>
+
+      {/* Block toolbar */}
+      <BlockToolbar
+        activeTool={pendingBlockType}
+        onToolPointerDown={handleToolPointerDown}
+      />
 
       {/* Right — settings */}
       <Settings

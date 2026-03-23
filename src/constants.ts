@@ -36,3 +36,45 @@ export const PAGE_BG: Record<Theme, Record<BgKey, string>> = {
   light: { white: '#ffffff', cream: '#FAF7F0', gray: '#F5F5F5' },
   dark:  { white: '#1e1e1e', cream: '#1c1a14', gray: '#252422' },
 }
+
+// ── Blocks ──
+
+export type BlockType = 'text' | 'shape' | 'stars' | 'progress'
+
+export interface BlockCellData {
+  char: string
+  bold: boolean
+  italic: boolean
+}
+
+export interface Block {
+  id: string
+  type: BlockType
+  col: number       // grid column of top-left (0-indexed within COLS)
+  row: number       // grid row of top-left (0-indexed within ROWS)
+  colSpan: number   // width in grid cells (min 1)
+  rowSpan: number   // height in grid cells (min 1)
+  cells?: BlockCellData[]  // text blocks only (colSpan × rowSpan cells)
+  // stars
+  starCount?: number   // 1–10, default 5
+  starRating?: number  // 0–starCount, default 0
+  // progress
+  barColor?: string    // fill colour
+  barProgress?: number // 0–100
+}
+
+export const BLOCK_DEFAULTS: Record<BlockType, { colSpan: number; rowSpan: number }> = {
+  text:     { colSpan: 24, rowSpan: 3 },
+  shape:    { colSpan: 7,  rowSpan: 3 },
+  stars:    { colSpan: 10, rowSpan: 1 },
+  progress: { colSpan: 10, rowSpan: 1 },
+}
+
+export const PROGRESS_COLORS = [
+  '#4a90e2',
+  '#52c41a',
+  '#faad14',
+  '#f5222d',
+  '#722ed1',
+  '#13c2c2',
+]

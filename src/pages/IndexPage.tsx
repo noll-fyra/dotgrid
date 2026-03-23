@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageThumbnail, { THUMB_W, THUMB_H } from '../components/PageThumbnail'
 import type { CellData } from '../hooks/useGrid'
+import type { Block } from '../constants'
 
 interface Props {
   pages: CellData[][]
@@ -12,6 +13,7 @@ interface Props {
   pageBg: string
   bookmarks: Set<number>
   toggleBookmark: (i: number) => void
+  pageBlocks: Block[][]
 }
 
 const truncate = (s: string, max = 20) => s.length > max ? s.slice(0, max) + '…' : s
@@ -36,7 +38,7 @@ function extractTags(cells: CellData[]): string[] {
   return [...tags]
 }
 
-export default function IndexPage({ pages, titles, currentPage, setCurrentPage, addPage, pageBg, bookmarks, toggleBookmark }: Props) {
+export default function IndexPage({ pages, titles, currentPage, setCurrentPage, addPage, pageBg, bookmarks, toggleBookmark, pageBlocks }: Props) {
   const navigate = useNavigate()
   const [searchQuery,    setSearchQuery]    = useState('')
   const [onlyBookmarked, setOnlyBookmarked] = useState(false)
@@ -161,7 +163,7 @@ export default function IndexPage({ pages, titles, currentPage, setCurrentPage, 
                 onClick={() => openPage(i)}
                 aria-label={`Open page ${i + 1}`}
               >
-                <PageThumbnail cells={pages[i]} pageBg={pageBg} />
+                <PageThumbnail cells={pages[i]} pageBg={pageBg} blocks={pageBlocks[i] ?? []} />
                 <span className="index-thumb-label">{truncate(titles[i] || `Page ${i + 1}`)}</span>
               </button>
               <button

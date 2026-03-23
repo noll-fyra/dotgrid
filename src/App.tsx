@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import IndexPage from './pages/IndexPage'
 import CreatePage from './pages/CreatePage'
-import { type Theme, type BgKey, type FontKey, FONTS, PAGE_BG } from './constants'
+import { type Theme, type BgKey, type FontKey, type Block, FONTS, PAGE_BG } from './constants'
 import { makeEmptyGrid, type CellData } from './hooks/useGrid'
 
 function load<T>(key: string, fallback: T): T {
@@ -23,6 +23,13 @@ export default function App() {
   const [titles, setTitles]           = useState<string[]>(() => load('dg_titles', []))
   const [currentPage, setCurrentPage] = useState(0)
   const [bookmarks, setBookmarks]     = useState<Set<number>>(() => new Set(load<number[]>('dg_bookmarks', [])))
+  const [pageBlocks, setPageBlocks]   = useState<Block[][]>(() => {
+    const saved = load<Block[][]>('dg_blocks', null as unknown as Block[][])
+    if (saved && Array.isArray(saved)) return saved
+    // Default: one empty block array per page
+    const pgs = load<CellData[][]>('dg_pages', [makeEmptyGrid()])
+    return pgs.map(() => [])
+  })
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -41,6 +48,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('dg_pages', JSON.stringify(pages))
   }, [pages])
+
+  useEffect(() => {
+    localStorage.setItem('dg_blocks', JSON.stringify(pageBlocks))
+  }, [pageBlocks])
 
   useEffect(() => {
     localStorage.setItem('dg_titles', JSON.stringify(titles))
@@ -74,15 +85,25 @@ export default function App() {
     })
   }, [currentPage])
 
+  const handleBlocksChange = useCallback((blocks: Block[]) => {
+    setPageBlocks(prev => {
+      const next = [...prev]
+      next[currentPage] = blocks
+      return next
+    })
+  }, [currentPage])
+
   const addPage = useCallback(() => {
     const newIndex = pages.length
     setPages(prev => [...prev, makeEmptyGrid()])
+    setPageBlocks(prev => [...prev, []])
     setCurrentPage(newIndex)
   }, [pages.length])
 
   const deletePage = useCallback((index: number) => {
     setPages(prev => prev.filter((_, i) => i !== index))
     setTitles(prev => prev.filter((_, i) => i !== index))
+    setPageBlocks(prev => prev.filter((_, i) => i !== index))
     setBookmarks(prev => {
       const next = new Set<number>()
       prev.forEach(b => {
@@ -110,6 +131,7 @@ export default function App() {
             pageBg={pageBg}
             bookmarks={bookmarks}
             toggleBookmark={toggleBookmark}
+            pageBlocks={pageBlocks}
           />
         }
       />
@@ -132,6 +154,8 @@ export default function App() {
             bookmarks={bookmarks}
             toggleBookmark={toggleBookmark}
             onDeletePage={deletePage}
+            blocks={pageBlocks[currentPage] ?? []}
+            onBlocksChange={handleBlocksChange}
           />
         }
       />

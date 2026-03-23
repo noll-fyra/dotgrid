@@ -970,3 +970,403 @@ body {
   color: rgba(0, 0, 0, 0.25);
   pointer-events: none;
 }
+
+/* ════════════════════════════════════════
+   Blocks
+   ════════════════════════════════════════ */
+
+/* ── Block toolbar ── */
+.block-toolbar {
+  width: 48px;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 0 24px;
+}
+
+.block-tool-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--text-color);
+  font-family: var(--font);
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.1s, border-color 0.1s, background 0.1s;
+}
+
+.block-tool-btn:hover {
+  opacity: 0.75;
+}
+
+.block-tool-btn--active {
+  opacity: 1;
+  border-color: rgba(80, 120, 220, 0.5);
+  background: rgba(80, 120, 220, 0.08);
+  color: #3a6ddc;
+}
+
+/* ── Block layer ── */
+.block-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.block-layer--placing {
+  pointer-events: all;
+  cursor: crosshair;
+  z-index: 5;
+}
+
+/* ── Individual block ── */
+.block {
+  position: absolute;
+  pointer-events: all;
+  user-select: none;
+  border-radius: 3px;
+  cursor: grab;
+}
+
+.block:active {
+  cursor: grabbing;
+}
+
+.block--text {
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.block--text:hover,
+.block--text.block--active {
+  background: rgba(0, 0, 0, 0.025);
+  border-color: rgba(80, 120, 220, 0.25);
+}
+
+.block--shape {
+  background: transparent;
+  border: 1.5px solid rgba(80, 75, 65, 0.45);
+}
+
+.block--shape.block--active {
+  border-color: rgba(80, 120, 220, 0.6);
+}
+
+
+/* ── Resize handles ── */
+.block-resize-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border: 1.5px solid rgba(80, 120, 220, 0.6);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 2;
+}
+
+.block--active .block-resize-handle {
+  opacity: 1;
+}
+
+.block-resize-handle--nw { top: -4px;    left: -4px;    cursor: nw-resize; }
+.block-resize-handle--ne { top: -4px;    right: -4px;   cursor: ne-resize; }
+.block-resize-handle--sw { bottom: -4px; left: -4px;    cursor: sw-resize; }
+.block-resize-handle--se { bottom: -4px; right: -4px;   cursor: se-resize; }
+
+/* ── Delete button ── */
+.block-delete-btn {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.12s;
+  padding: 0;
+  z-index: 3;
+}
+
+.block--active .block-delete-btn {
+  opacity: 1;
+}
+
+.block-delete-btn:hover {
+  opacity: 1 !important;
+  background: #a93226;
+}
+
+/* ── Text block grid ── */
+.block-text-grid {
+  display: grid;
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+}
+
+.block-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cell-w);
+  height: var(--cell-h);
+}
+
+/* ── Ghost preview ── */
+.block-ghost {
+  position: absolute;
+  pointer-events: none;
+  border: 1.5px dashed rgba(80, 120, 220, 0.55);
+  border-radius: 3px;
+  z-index: 4;
+}
+
+.block-ghost--text     { background: rgba(80, 120, 220, 0.05); }
+.block-ghost--shape    { background: rgba(80, 120, 220, 0.03); }
+.block-ghost--stars    { background: rgba(80, 120, 220, 0.04); }
+.block-ghost--progress { background: rgba(80, 120, 220, 0.04); }
+
+/* ── w / e resize handles (stars: width-only) ── */
+.block-resize-handle--w {
+  top: 50%;
+  left: -4px;
+  transform: translateY(-50%);
+  cursor: w-resize;
+}
+.block-resize-handle--e {
+  top: 50%;
+  right: -4px;
+  transform: translateY(-50%);
+  cursor: e-resize;
+}
+
+/* ── Stars block ── */
+.block--stars {
+  background: transparent;
+  border: none;
+}
+
+.block-stars {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+
+.block-star {
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  color: rgba(100, 96, 88, 0.45);
+  transition: color 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.block-star:hover {
+  color: rgba(100, 96, 88, 0.7);
+}
+
+.block-star--filled {
+  color: #f59e0b;
+}
+
+/* ── Progress block ── */
+.block--progress {
+  background: transparent;
+  border: 1.5px solid rgba(80, 75, 65, 0.35);
+  overflow: hidden;
+}
+
+.block--progress.block--active {
+  border-color: rgba(80, 120, 220, 0.5);
+}
+
+.block-progress {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.block-progress-fill {
+  height: 100%;
+  transition: width 0.25s ease;
+}
+
+/* ── Block config toolbar (above block when active) ── */
+.block-config-toolbar {
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8f6f2;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 20;
+  white-space: nowrap;
+  pointer-events: all;
+  cursor: default;
+}
+
+.block-config-count-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 10px;
+  color: #2a2926;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+  transition: opacity 0.1s, background 0.1s;
+  padding: 0;
+}
+
+.block-config-count-btn:hover { opacity: 0.85; background: rgba(0,0,0,0.06); }
+
+.block-config-count-btn--active {
+  opacity: 1;
+  border-color: rgba(80, 120, 220, 0.45);
+  background: rgba(80, 120, 220, 0.08);
+  color: #3a6ddc;
+}
+
+.block-config-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s, box-shadow 0.1s;
+  flex-shrink: 0;
+}
+
+.block-config-swatch:hover { transform: scale(1.15); }
+
+.block-config-swatch--active {
+  box-shadow: 0 0 0 2px #f8f6f2, 0 0 0 3.5px rgba(0,0,0,0.35);
+}
+
+.block-config-sep {
+  width: 1px;
+  height: 16px;
+  background: rgba(0,0,0,0.12);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+.block-config-step-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: transparent;
+  font-family: var(--font);
+  font-size: 14px;
+  color: #2a2926;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.6;
+  transition: opacity 0.1s, background 0.1s;
+}
+
+.block-config-step-btn:hover { opacity: 1; background: rgba(0,0,0,0.05); }
+
+.block-config-value {
+  font-family: var(--font);
+  font-size: 10px;
+  color: #2a2926;
+  min-width: 30px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* ── Dark mode block overrides ── */
+[data-theme="dark"] .block--text:hover,
+[data-theme="dark"] .block--text.block--active {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(100, 140, 220, 0.3);
+}
+
+[data-theme="dark"] .block--shape {
+  border-color: rgba(200, 195, 185, 0.4);
+}
+
+[data-theme="dark"] .block--shape.block--active {
+  border-color: rgba(100, 140, 220, 0.7);
+}
+
+[data-theme="dark"] .block-resize-handle {
+  background: #2a2926;
+  border-color: rgba(100, 140, 220, 0.7);
+}
+
+[data-theme="dark"] .block-tool-btn--active {
+  border-color: rgba(100, 140, 220, 0.5);
+  background: rgba(100, 140, 220, 0.1);
+  color: #6a9de8;
+}
+
+[data-theme="dark"] .block--progress {
+  border-color: rgba(200, 195, 185, 0.35);
+}
+
+[data-theme="dark"] .block-progress {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+[data-theme="dark"] .block-star {
+  color: rgba(200, 195, 185, 0.45);
+}
+
+[data-theme="dark"] .block-config-toolbar {
+  background: #edeae4;
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .block-config-swatch--active {
+  box-shadow: 0 0 0 2px #edeae4, 0 0 0 3.5px rgba(0,0,0,0.45);
+}

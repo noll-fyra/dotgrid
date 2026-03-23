@@ -253,6 +253,40 @@ export function useGrid(initialCells?: CellData[]) {
       navigator.clipboard.writeText(text.trimEnd())
       return
     }
+    if (mod && !shift && e.key === 'x' && selection) {
+      e.preventDefault()
+      let text = ''
+      if (selection.rect) {
+        const aRow = Math.floor(selection.anchor / COLS), aCol = selection.anchor % COLS
+        const hRow = Math.floor(selection.head   / COLS), hCol = selection.head   % COLS
+        const r0 = Math.min(aRow, hRow), r1 = Math.max(aRow, hRow)
+        const c0 = Math.min(aCol, hCol), c1 = Math.max(aCol, hCol)
+        for (let r = r0; r <= r1; r++) {
+          if (r > r0) text += '\n'
+          for (let c = c0; c <= c1; c++) text += cells[r * COLS + c].char
+        }
+        navigator.clipboard.writeText(text.trimEnd())
+        const indices = selectionIndices(selection)
+        snapshot()
+        setCells(prev => {
+          const next = [...prev]
+          for (const i of indices) next[i] = { ...next[i], char: '' }
+          return next
+        })
+      } else {
+        const { start, end } = selectionRange(selection)
+        for (let i = start; i <= end; i++) {
+          if (i > start && i % COLS === 0) text += '\n'
+          text += cells[i].char
+        }
+        navigator.clipboard.writeText(text.trimEnd())
+        snapshot()
+        setCells(prev => deleteRangeAndShiftLeft(prev, start, end))
+        setCursorRaw(start)
+      }
+      setSelection(null)
+      return
+    }
 
     if (e.key === 'ArrowLeft') {
       e.preventDefault()
@@ -352,22 +386,44 @@ export function useGrid(initialCells?: CellData[]) {
       e.preventDefault()
       setSelection(null)
       snapshot()
-      setCells(prev => {
-        const next = shiftRunRight(prev, cursor)
-        next[cursor] = { ...next[cursor], char: ' ' }
-        return next
-      })
-      setCursorRaw(c => Math.min(c + 1, TOTAL_CELLS - 1))
+      if (selection && !selection.rect) {
+        const { start, end } = selectionRange(selection)
+        setCells(prev => {
+          const after = deleteRangeAndShiftLeft(prev, start, end)
+          const next = shiftRunRight(after, start)
+          next[start] = { ...next[start], char: ' ' }
+          return next
+        })
+        setCursorRaw(start + 1)
+      } else {
+        setCells(prev => {
+          const next = shiftRunRight(prev, cursor)
+          next[cursor] = { ...next[cursor], char: ' ' }
+          return next
+        })
+        setCursorRaw(c => Math.min(c + 1, TOTAL_CELLS - 1))
+      }
     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
       e.preventDefault()
       setSelection(null)
       snapshot()
-      setCells(prev => {
-        const next = shiftRunRight(prev, cursor)
-        next[cursor] = { ...next[cursor], char: e.key }
-        return next
-      })
-      setCursorRaw(c => Math.min(c + 1, TOTAL_CELLS - 1))
+      if (selection && !selection.rect) {
+        const { start, end } = selectionRange(selection)
+        setCells(prev => {
+          const after = deleteRangeAndShiftLeft(prev, start, end)
+          const next = shiftRunRight(after, start)
+          next[start] = { ...next[start], char: e.key }
+          return next
+        })
+        setCursorRaw(start + 1)
+      } else {
+        setCells(prev => {
+          const next = shiftRunRight(prev, cursor)
+          next[cursor] = { ...next[cursor], char: e.key }
+          return next
+        })
+        setCursorRaw(c => Math.min(c + 1, TOTAL_CELLS - 1))
+      }
     }
   }, [cursor, cells, selection, snapshot, undo, redo, applyFormat, extendSelectionTo, setCursor])
 
